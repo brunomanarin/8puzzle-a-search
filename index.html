@@ -142,15 +142,13 @@
         })
 
         const start = board;
-        const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-        const checkIfTreeHasSolution = tree.filter(branch => {
-            branch.filter(node => {
-                return JSON.stringify(node.treeNode) == JSON.stringify(endBoard);
-            })
-        })
+        const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 
         let nextNode = null;
-        while (gCounter < 80000) {
+
+        let solutionFound = false;
+
+        while (!solutionFound) {
             gCounter++
             if (nextNode == null) {
                 tree.push(buildTreeBranch(start))
@@ -159,8 +157,15 @@
                 tree.push(buildTreeBranch(nextNode.treeNode))
                 nextNode = calculateBestNextTreeNode(tree, gCounter)
             }
-            console.log(gCounter)
+            tree.map(branch => {
+                branch.map(node => {
+                    if(JSON.stringify(node.treeNode) === JSON.stringify(endBoard)){
+                        solutionFound = true;
+                    }
+                })
+            })
         }
+
         const ul = document.createElement("ul")
         document.getElementById('main').appendChild(ul)
         for (let i = 0; i < 3; i++) {
@@ -175,7 +180,6 @@
                 ul.children[index].appendChild(numWrapper)
             })
         })
-        console.log(nextNode)
     </script>
 </body>
 
