@@ -1,0 +1,183 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="main">
+        <ul id="boardPuzzle">
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+    </div>
+    <script>
+        const boardHTML = document.getElementById("boardPuzzle")
+        const goalBoardMap = {
+            1: [0, 0],
+            2: [0, 1],
+            3: [0, 2],
+            4: [1, 0],
+            5: [1, 1],
+            6: [1, 2],
+            7: [2, 0],
+            8: [2, 1]
+        }
+        const board = [[], [], []]
+
+        const findMovementPossibilities = (spaceIndex) => {
+            const pos = spaceIndex[0]
+            const row = spaceIndex[1]
+
+            switch (row) {
+                case 0:
+                    switch (pos) {
+                        case 0:
+                            return [null, [1, 0], null, [0, 1]]
+                        case 1:
+                            return [null, [1, 1], [0, 0], [0, 2]]
+                        case 2:
+                            return [null, [1, 2], [0, 1], null]
+
+                    }
+                case 1:
+                    switch (pos) {
+                        case 0:
+                            return [[0, 0], [2, 0], null, [[1, 1]]]
+                        case 1:
+                            return [[0, 1], [2, 1], [1, 0], [1, 2]]
+                        case 2:
+                            return [[0, 2], [2, 2], [1, 1], null]
+
+                    }
+                case 2:
+                    switch (pos) {
+                        case 0:
+                            return [[1, 0], null, null, [2, 1]]
+                        case 1:
+                            return [[1, 1], null, [2, 0], [2, 2]]
+                        case 2:
+                            return [[1, 2], null, [2, 1], null]
+                    }
+            }
+        }
+        const buildTreeBranch = (parentNode) => {
+            const emptySpaceIndex = findNodeEmptySpace(parentNode)
+            const possibleMovements = findMovementPossibilities(emptySpaceIndex)
+            const treeBranchList = possibleMovements.map(possibility => {
+                if (possibility) {
+                    const treeNode = JSON.parse(JSON.stringify(parentNode));
+
+                    const temp = treeNode[possibility[0]][possibility[1]]
+                    treeNode[possibility[0]][possibility[1]] = 0
+                    treeNode[emptySpaceIndex[1]][emptySpaceIndex[0]] = temp
+                    const ul = document.createElement("ul")
+                    let hCounter = 0;
+                    treeNode.map((row, rowIndex) => {
+                        const isAtRightPlace = row.map((num, numIndex) => {
+                            if (num === 0) return null
+                            const goalCoordinates = goalBoardMap[num]
+                            if (goalCoordinates[0] !== rowIndex || goalCoordinates[1] !== numIndex) {
+                                return hCounter++
+                            }
+                        })
+                    })
+
+                    document.getElementById('main').appendChild(ul)
+                    for (let i = 0; i < 3; i++) {
+                        ul.appendChild(document.createElement("li"))
+                    }
+                    treeNode.map((row, index) => {
+                        row.map(num => {
+                            const numWrapper = document.createElement("SPAN")
+                            const listItemContent = document.createTextNode(num)
+                            numWrapper.appendChild(listItemContent)
+                            ul.children[index].appendChild(numWrapper)
+                        })
+                    })
+
+                    return { treeNode, hValue: hCounter }
+                }
+            })
+            return treeBranchList.filter(val => val !== undefined && val !== null)
+        }
+        const fillBoard = (board) => {
+            const numbersList = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+            for (let i = 0; i < board.length; i++) {
+                while (board[i].length < 3) {
+                    const randomNumber = numbersList[Math.floor(Math.random() * 9)]
+                    const alreadyHasNumberInRows = board.map(row => {
+                        return row.includes(randomNumber)
+                    })
+                    if (!alreadyHasNumberInRows[0] && !alreadyHasNumberInRows[1] && !alreadyHasNumberInRows[2]) {
+                        board[i].push(randomNumber)
+                    }
+                }
+            }
+        }
+        const findNodeEmptySpace = (treeNode) => {
+            console.log(treeNode)
+            let foundEmptySpaceIndex;
+            treeNode.forEach((row, index) => {
+                const indexFound = row.findIndex(num => num == 0)
+                if (indexFound !== -1) {
+                    foundEmptySpaceIndex = [indexFound, index]
+                }
+            })
+            return foundEmptySpaceIndex;
+        }
+        const calculateBestNextTreeNode = (tree) => {
+            let bestNodeScore = Infinity;
+            let bestNode = null;
+
+            const checkIfTreeHasSolution = tree.map(branch => {
+                branch.map(node => {
+                    if( node.hValue <= bestNodeScore){
+                        bestNodeScore = node.hValue 
+                        bestNode = node
+                    }
+                })
+            })
+            return bestNode
+        }
+
+        fillBoard(board)
+
+        board.map((row, index) => {
+            row.map(num => {
+                const numWrapper = document.createElement("SPAN")
+                const listItemContent = document.createTextNode(num)
+                numWrapper.appendChild(listItemContent)
+                boardHTML.children[index].appendChild(numWrapper)
+            })
+
+        })
+
+        const tree = []
+
+        const start = board;
+        const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        const checkIfTreeHasSolution = tree.filter(branch => {
+            branch.filter(node => {
+                return JSON.stringify(node.treeNode) == JSON.stringify(endBoard);
+            })
+        })
+        let gCounter = 0;
+        let nextNode = null;
+        console.log(checkIfTreeHasSolution)
+
+        while (!!checkIfTreeHasSolution) {
+            gCounter++
+            if (nextNode == null) {
+                tree.push(buildTreeBranch(start))
+                nextNode = calculateBestNextTreeNode(tree)
+            } else {
+                tree.push(buildTreeBranch(nextNode))
+            }
+        }
+        console.log(gCounter)
+    </script>
+</body>
+
+</html>
