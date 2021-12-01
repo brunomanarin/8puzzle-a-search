@@ -27,6 +27,7 @@
         const board = [[], [], []]
         const tree = []
         let gCounter = 0;
+        let nextNode = null;
 
         const findMovementPossibilities = (spaceIndex) => {
             const pos = spaceIndex[0]
@@ -46,7 +47,7 @@
                 case 1:
                     switch (pos) {
                         case 0:
-                            return [[0, 0], [2, 0], null, [[1, 1]]]
+                            return [[0, 0], [2, 0], null, [1, 1]]
                         case 1:
                             return [[0, 1], [2, 1], [1, 0], [1, 2]]
                         case 2:
@@ -64,7 +65,7 @@
                     }
             }
         }
-        const buildTreeBranch = (parentNode) => {
+        const buildTreeBranch = (parentNode, parentNodeInfo) => {
             const emptySpaceIndex = findNodeEmptySpace(parentNode)
             const possibleMovements = findMovementPossibilities(emptySpaceIndex)
             const treeBranchList = possibleMovements.map(possibility => {
@@ -83,8 +84,9 @@
                             }
                         })
                     })
-                    if (JSON.stringify(parentNode) !== JSON.stringify(treeNode) && JSON.stringify(board) !== JSON.stringify(treeNode)) {
-                        return { treeNode, hValue: hCounter, gValue: gCounter }
+
+                    if (JSON.stringify(parentNodeInfo.parent) !== JSON.stringify(treeNode) && JSON.stringify(parentNode) !== JSON.stringify(treeNode) && JSON.stringify(board) !== JSON.stringify(treeNode)) {
+                        return { treeNode, hValue: hCounter, gValue: gCounter, parent: parentNode }
                     }
                 }
             })
@@ -120,8 +122,8 @@
 
             const checkIfTreeHasSolution = tree.map(branch => {
                 branch.map(node => {
-                    if (node.gValue >= gScore && node.hValue + gScore <= bestNodeScore) {
-                        bestNodeScore = node.hValue
+                    if (node.gValue >= gScore && node.hValue + gScore < bestNodeScore) {
+                        bestNodeScore = node.hValue + gScore
                         bestNode = node
                     }
                 })
@@ -144,26 +146,26 @@
         const start = board;
         const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 
-        let nextNode = null;
+
 
         let solutionFound = false;
 
-        while (!solutionFound) {
+        while (!solutionFound || gCounter > 10000) {
             gCounter++
             if (nextNode == null) {
-                tree.push(buildTreeBranch(start))
+                tree.push(buildTreeBranch(start, {parent:null}))
                 nextNode = calculateBestNextTreeNode(tree, gCounter)
             } else {
-                tree.push(buildTreeBranch(nextNode.treeNode))
+                tree.push(buildTreeBranch(nextNode.treeNode, nextNode))
+
                 nextNode = calculateBestNextTreeNode(tree, gCounter)
             }
-            tree.map(branch => {
-                branch.map(node => {
-                    if(JSON.stringify(node.treeNode) === JSON.stringify(endBoard)){
-                        solutionFound = true;
-                    }
-                })
-            })
+            console.log(nextNode)
+            console.log(gCounter)
+            if (JSON.stringify(nextNode.treeNode) === JSON.stringify(endBoard)) {
+                solutionFound = true;
+            }
+
         }
 
         const ul = document.createElement("ul")
