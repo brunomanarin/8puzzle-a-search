@@ -22,12 +22,18 @@
             5: [1, 1],
             6: [1, 2],
             7: [2, 0],
-            8: [2, 1]
+            8: [2, 1],
+            0: [2, 2]
         }
-        const board = [[], [], []]
+        const board = [[4,1,2], [7,5,3], [0,8,6]]
+        //const board = [[], [], []]
         const tree = []
         let gCounter = 0;
         let nextNode = null;
+
+
+        const expandedNodes = []
+        const frontier = []
 
         const findMovementPossibilities = (spaceIndex) => {
             const pos = spaceIndex[0]
@@ -77,7 +83,6 @@
                     let hCounter = 0;
                     treeNode.map((row, rowIndex) => {
                         const isAtRightPlace = row.map((num, numIndex) => {
-                            if (num === 0) return null
                             const goalCoordinates = goalBoardMap[num]
                             if (goalCoordinates[0] !== rowIndex || goalCoordinates[1] !== numIndex) {
                                 return hCounter++
@@ -85,8 +90,8 @@
                         })
                     })
 
-                    if (JSON.stringify(parentNodeInfo.parent) !== JSON.stringify(treeNode) && JSON.stringify(parentNode) !== JSON.stringify(treeNode) && JSON.stringify(board) !== JSON.stringify(treeNode)) {
-                        return { treeNode, hValue: hCounter, gValue: gCounter, parent: parentNode }
+                    if (JSON.stringify(parentNodeInfo.treeNode) !== JSON.stringify(treeNode) && JSON.stringify(parentNode) !== JSON.stringify(treeNode) && JSON.stringify(board) !== JSON.stringify(treeNode)) {
+                        return { treeNode, hValue: hCounter, gValue: gCounter, parent: parentNodeInfo }
                     }
                 }
             })
@@ -116,18 +121,26 @@
             })
             return foundEmptySpaceIndex;
         }
+
         const calculateBestNextTreeNode = (tree, gScore) => {
+
+            
             let bestNodeScore = Infinity;
             let bestNode = null;
-
-            const checkIfTreeHasSolution = tree.map(branch => {
-                branch.map(node => {
-                    if (node.gValue >= gScore && node.hValue + gScore < bestNodeScore) {
-                        bestNodeScore = node.hValue + gScore
-                        bestNode = node
-                    }
-                })
+            tree.map(node => {
+                let nodeParent = node.parent
+                let totalGScore = 0
+                while(nodeParent.treeNode !== null){
+                    totalGScore += nodeParent.gValue
+                    nodeParent = nodeParent.parent
+                }
+                if (node.hValue + node.gValue + totalGScore < bestNodeScore && node !== null) {
+                    bestNodeScore = node.hValue + node.gValue + totalGScore
+                    bestNode = node
+                }
             })
+            console.log(bestNode)
+            console.log(bestNodeScore)
             return bestNode
         }
 
@@ -146,22 +159,25 @@
         const start = board;
         const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 
-
-
         let solutionFound = false;
 
-        while (!solutionFound || gCounter > 10000) {
+        while (!solutionFound && gCounter < 1000) {
             gCounter++
             if (nextNode == null) {
-                tree.push(buildTreeBranch(start, {parent:null}))
-                nextNode = calculateBestNextTreeNode(tree, gCounter)
+                expandedNodes.push(start)
+                buildTreeBranch(start, {treeNode: null }).forEach(node => {
+                    frontier.push(node)
+                })
+                nextNode = calculateBestNextTreeNode(frontier, gCounter)
             } else {
-                tree.push(buildTreeBranch(nextNode.treeNode, nextNode))
-
-                nextNode = calculateBestNextTreeNode(tree, gCounter)
+                expandedNodes.push(nextNode)
+                const nodeIndex = frontier.indexOf(nextNode)
+                frontier.splice(nodeIndex, 1)
+                buildTreeBranch(nextNode.treeNode, nextNode).forEach(node => {
+                    frontier.push(node)
+                })
+                nextNode = calculateBestNextTreeNode(frontier, gCounter)
             }
-            console.log(nextNode)
-            console.log(gCounter)
             if (JSON.stringify(nextNode.treeNode) === JSON.stringify(endBoard)) {
                 solutionFound = true;
             }
