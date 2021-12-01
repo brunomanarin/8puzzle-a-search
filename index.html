@@ -12,6 +12,9 @@
             <li></li>
         </ul>
     </div>
+    <div id= "infos">
+
+    </div>
     <script>
         const boardHTML = document.getElementById("boardPuzzle")
         const goalBoardMap = {
@@ -25,8 +28,8 @@
             8: [2, 1],
             0: [2, 2]
         }
-        const board = [[4,1,2], [7,5,3], [0,8,6]]
-        //const board = [[], [], []]
+        //const board = [[1,2,0], [4,5,3], [7,8,6]]
+        const board = [[1, 8, 2],[0, 4, 3],[7, 6, 5]]
         const tree = []
         let gCounter = 0;
         let nextNode = null;
@@ -34,7 +37,18 @@
 
         const expandedNodes = []
         const frontier = []
-
+        const checkIfSolvable = (board) => {
+            let invCount = 0;
+            board.map((row, rowIndex) =>{
+                row.map((num, numIndex) =>{
+                    if (board[rowIndex][numIndex] > 0 && board[rowIndex][numIndex] > board[numIndex][rowIndex]){
+                        invCount += 1;
+                    }
+                })
+            })
+            console.log(invCount)
+            return (invCount % 2 == 0);
+        }
         const findMovementPossibilities = (spaceIndex) => {
             const pos = spaceIndex[0]
             const row = spaceIndex[1]
@@ -110,6 +124,7 @@
                     }
                 }
             }
+            console.log(checkIfSolvable(board))
         }
         const findNodeEmptySpace = (treeNode) => {
             let foundEmptySpaceIndex;
@@ -121,16 +136,15 @@
             })
             return foundEmptySpaceIndex;
         }
-
         const calculateBestNextTreeNode = (tree, gScore) => {
 
-            
+
             let bestNodeScore = Infinity;
             let bestNode = null;
             tree.map(node => {
                 let nodeParent = node.parent
                 let totalGScore = 0
-                while(nodeParent.treeNode !== null){
+                while (nodeParent.treeNode !== null) {
                     totalGScore += nodeParent.gValue
                     nodeParent = nodeParent.parent
                 }
@@ -139,13 +153,12 @@
                     bestNode = node
                 }
             })
-            console.log(bestNode)
-            console.log(bestNodeScore)
+
             return bestNode
         }
 
-        fillBoard(board)
-
+        //fillBoard(board)
+        checkIfSolvable(board)
         board.map((row, index) => {
             row.map(num => {
                 const numWrapper = document.createElement("SPAN")
@@ -156,48 +169,61 @@
 
         })
 
-        const start = board;
-        const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 
         let solutionFound = false;
+        const main = () => {
+            const start = board;
+            const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 
-        while (!solutionFound && gCounter < 1000) {
+
             gCounter++
-            if (nextNode == null) {
-                expandedNodes.push(start)
-                buildTreeBranch(start, {treeNode: null }).forEach(node => {
-                    frontier.push(node)
-                })
-                nextNode = calculateBestNextTreeNode(frontier, gCounter)
-            } else {
-                expandedNodes.push(nextNode)
-                const nodeIndex = frontier.indexOf(nextNode)
-                frontier.splice(nodeIndex, 1)
-                buildTreeBranch(nextNode.treeNode, nextNode).forEach(node => {
-                    frontier.push(node)
-                })
-                nextNode = calculateBestNextTreeNode(frontier, gCounter)
+            console.log("Iterations: " + gCounter)
+            if(!solutionFound){
+                if (nextNode == null) {
+                    expandedNodes.push(start)
+                    buildTreeBranch(start, { treeNode: null }).forEach(node => {
+                        frontier.push(node)
+                    })
+                    nextNode = calculateBestNextTreeNode(frontier, gCounter)
+                } else {
+                    expandedNodes.push(nextNode)
+                    const nodeIndex = frontier.indexOf(nextNode)
+                    frontier.splice(nodeIndex, 1)
+                    buildTreeBranch(nextNode.treeNode, nextNode).forEach(node => {
+                        frontier.push(node)
+                    })
+                    nextNode = calculateBestNextTreeNode(frontier, gCounter)
+                    renderNewBoard(nextNode)
+                }
+                if (JSON.stringify(nextNode.treeNode) === JSON.stringify(endBoard)) {
+                    solutionFound = true;
+                    console.log('done!')
+                    renderNewBoard(nextNode)
+                    clearInterval(renderInterval)
+                }
             }
-            if (JSON.stringify(nextNode.treeNode) === JSON.stringify(endBoard)) {
-                solutionFound = true;
-            }
-
         }
 
-        const ul = document.createElement("ul")
-        document.getElementById('main').appendChild(ul)
-        for (let i = 0; i < 3; i++) {
-            ul.appendChild(document.createElement("li"))
-        }
-
-        nextNode.treeNode.map((row, index) => {
-            row.map(num => {
-                const numWrapper = document.createElement("SPAN")
-                const listItemContent = document.createTextNode(num)
-                numWrapper.appendChild(listItemContent)
-                ul.children[index].appendChild(numWrapper)
+        const renderNewBoard = () => {
+            document.getElementById("boardPuzzle").remove()
+            const ul = document.createElement("ul")
+            ul.id = "boardPuzzle"
+            document.getElementById('main').appendChild(ul)
+            for (let i = 0; i < 3; i++) {
+                ul.appendChild(document.createElement("li"))
+            }
+            nextNode.treeNode.map((row, index) => {
+                row.map(num => {
+                    const numWrapper = document.createElement("SPAN")
+                    const listItemContent = document.createTextNode(num)
+                    numWrapper.appendChild(listItemContent)
+                    ul.children[index].appendChild(numWrapper)
+                })
             })
-        })
+        }
+
+        
+        const renderInterval = setInterval(main, 33);
     </script>
 </body>
 
