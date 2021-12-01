@@ -28,8 +28,9 @@
             8: [2, 1],
             0: [2, 2]
         }
-        //const board = [[1,2,0], [4,5,3], [7,8,6]]
-        const board = [[1, 8, 2],[0, 4, 3],[7, 6, 5]]
+        //const board = [[8,1,2], [0,4,3], [7,6,5]]
+        //const board = [[1, 8, 2],[0, 4, 3],[7, 6, 5]]
+        const board = [[],[],[]]
         const tree = []
         let gCounter = 0;
         let nextNode = null;
@@ -37,18 +38,7 @@
 
         const expandedNodes = []
         const frontier = []
-        const checkIfSolvable = (board) => {
-            let invCount = 0;
-            board.map((row, rowIndex) =>{
-                row.map((num, numIndex) =>{
-                    if (board[rowIndex][numIndex] > 0 && board[rowIndex][numIndex] > board[numIndex][rowIndex]){
-                        invCount += 1;
-                    }
-                })
-            })
-            console.log(invCount)
-            return (invCount % 2 == 0);
-        }
+
         const findMovementPossibilities = (spaceIndex) => {
             const pos = spaceIndex[0]
             const row = spaceIndex[1]
@@ -124,7 +114,6 @@
                     }
                 }
             }
-            console.log(checkIfSolvable(board))
         }
         const findNodeEmptySpace = (treeNode) => {
             let foundEmptySpaceIndex;
@@ -137,7 +126,6 @@
             return foundEmptySpaceIndex;
         }
         const calculateBestNextTreeNode = (tree, gScore) => {
-
 
             let bestNodeScore = Infinity;
             let bestNode = null;
@@ -157,8 +145,26 @@
             return bestNode
         }
 
-        //fillBoard(board)
-        checkIfSolvable(board)
+        const isSolvable = (start) =>{
+            let inversions = 0
+            const range = Array.from(Array(9).keys())
+            JSON.stringify(range)
+            for (i in range){
+                const [x, y] = [Math.floor(i / 3), i % 3];
+                for (j in Array.from({length: 8}, (_, index) => i + 1)){
+                    const [x2, y2] = [Math.floor(j / 3), j % 3];
+                    if (start[x][y] > 0 && start[x2][y2] > 0 && start[x2][y2] < start[x][y]){
+                        inversions += 1
+                    }
+                }
+            }
+
+            return inversions % 2 == 0
+
+        }
+
+
+        fillBoard(board)
         board.map((row, index) => {
             row.map(num => {
                 const numWrapper = document.createElement("SPAN")
@@ -222,8 +228,11 @@
             })
         }
 
-        
-        const renderInterval = setInterval(main, 33);
+        if(!isSolvable(board)){
+            alert("Não da pra resolver")
+        }else{
+            const renderInterval = setInterval(main, 33) ;
+        }
     </script>
 </body>
 
