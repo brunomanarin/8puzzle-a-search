@@ -28,6 +28,7 @@
         <p id="biggest-frontier"></p>
         <p id="path-size"></p>
         <p id="current-hscore"></p>
+        <button id="pauseButton" onclick="pauseSolution()">PAUSE</button>
     </div>
     <script>
         const boardHTML = document.getElementById("originalBoardPuzzle")
@@ -42,7 +43,40 @@
             8: [2, 1],
             0: [2, 2]
         }
-        const board = [[3,2,7], [1,4,6], [0,5,8]]
+
+        let entries = [
+            [[1, 2, 3], [4, 5, 6], [0, 7, 8]],
+            [[5, 7, 2], [0, 4, 8], [1, 6, 3]],
+            [[4, 1, 3], [7, 0, 8], [6, 2, 5]],
+            [[7, 4, 2], [8, 1, 5], [6, 3, 0]],
+            [[1, 0, 3], [5, 2, 4], [7, 6, 8]],
+            [[1, 6, 2], [8, 3, 0], [4, 5, 7]],
+            [[7, 2, 6], [5, 0, 4], [1, 3, 8]],
+            [[7, 1, 2], [4, 8, 0], [5, 6, 3]],
+            [[6, 1, 5], [2, 0, 3], [4, 7, 8]],
+            [[4, 0, 6], [5, 1, 2], [7, 8, 3]],
+            [[2, 5, 0], [1, 6, 7], [4, 8, 3]],
+            [[0, 3, 5], [1, 8, 7], [4, 6, 2]],
+            [[2, 5, 0], [4, 6, 3], [7, 1, 8]],
+            [[1, 0, 7], [4, 3, 2], [8, 5, 6]],
+            [[1, 4, 5], [7, 6, 2], [0, 8, 3]],
+            [[1, 4, 2], [7, 5, 0], [8, 3, 6]],
+            [[3, 4, 6], [7, 1, 0], [2, 5, 8]],
+            [[2, 0, 6], [7, 4, 1], [5, 3, 8]],
+            [[1, 5, 3], [4, 2, 8], [0, 7, 6]],
+            [[2, 0, 3], [7, 4, 6], [8, 5, 1]],
+            [[0, 7, 5], [2, 3, 1], [8, 4, 6]],
+            [[7, 3, 5], [8, 0, 1], [4, 2, 6]],
+            [[4, 2, 6], [3, 7, 1], [5, 0, 8]],
+            [[5, 2, 3], [8, 1, 0], [4, 6, 7]],
+            [[7, 1, 5], [3, 2, 6], [8, 0, 4]],
+            [[0, 8, 5], [3, 1, 2], [4, 7, 6]],
+            [[5, 3, 8], [4, 1, 0], [6, 2, 7]],
+            [[0, 1, 6], [8, 3, 5], [4, 7, 2]],
+            [[5, 8, 2], [1, 7, 3], [4, 6, 0]],
+            [[3, 5, 6], [0, 7, 4], [2, 1, 8]]
+        ]
+        const board = entries[3]
         //const board = [[1, 8, 2],[0, 4, 3],[7, 6, 5]]
         //const board = [[], [], []]
         const tree = []
@@ -102,19 +136,23 @@
                     treeNode.map((row, rowIndex) => {
                         const isAtRightPlace = row.map((num, numIndex) => {
                             const goalCoordinates = goalBoardMap[num]
+                            if (num == 0) return null
                             if (goalCoordinates[0] !== rowIndex || goalCoordinates[1] !== numIndex) {
                                 return hCounter++
                             }
                         })
                     })
 
-                    if (JSON.stringify(parentNodeInfo.treeNode) !== JSON.stringify(treeNode) && JSON.stringify(parentNode) !== JSON.stringify(treeNode) && JSON.stringify(board) !== JSON.stringify(treeNode)) {
-                        return { treeNode, hValue: hCounter, gValue: gCounter, parent: parentNodeInfo }
+                    if (JSON.stringify(parentNodeInfo.treeNode) !== JSON.stringify(treeNode) && JSON.stringify(parentNode) !== JSON.stringify(treeNode)) {
+                        return { treeNode, hValue: hCounter, gValue: parentNodeInfo.gValue + 1, parent: parentNodeInfo }
                     }
                 }
             })
             return treeBranchList.filter(val => val !== undefined && val !== null)
         }
+
+        let bestNode = null;
+
         const fillBoard = (board) => {
             const numbersList = [1, 2, 3, 4, 5, 6, 7, 8, 0]
             for (let i = 0; i < board.length; i++) {
@@ -139,19 +177,16 @@
             })
             return foundEmptySpaceIndex;
         }
-        const calculateBestNextTreeNode = (tree, gScore) => {
+        const calculateBestNextTreeNode = (tree) => {
             let bestNodeScore = Infinity;
-            let bestNode = null;
+
             tree.map(node => {
-                let nodeParent = node.parent
-                let totalGScore = 0
-                while (nodeParent.treeNode !== null) {
-                    totalGScore += nodeParent.gValue
-                    nodeParent = nodeParent.parent
-                }
-                if (node.hValue + node.gValue + totalGScore < bestNodeScore && node !== null) {
-                    bestNodeScore = node.hValue + node.gValue + totalGScore
+                const fValue = node.hValue + node.gValue
+                if (fValue < bestNodeScore && node !== null && JSON.stringify(nextNode) !== JSON.stringify(node)) {
+                    bestNodeScore = fValue
                     bestNode = node
+                    console.log(bestNode)
+                    console.log(node)
                 }
             })
 
@@ -172,9 +207,8 @@
             }
 
             return inversions % 2 == 0
-
         }
-        fillBoard(board)
+        //fillBoard(board)
         board.map((row, index) => {
             row.map(num => {
                 const numWrapper = document.createElement("SPAN")
@@ -187,17 +221,16 @@
 
 
         let solutionFound = false;
+        let pause = false;
         const main = () => {
             const start = board;
             const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
-
-
-            gCounter++
             console.log("Iterations: " + gCounter)
-            if (!solutionFound) {
+            if (!solutionFound && !pause) {
+                gCounter++
                 if (nextNode == null) {
-                    expandedNodes.push(start)
-                    buildTreeBranch(start, { treeNode: null }).forEach(node => {
+                    expandedNodes.push({ treeNode: start, parent: null, gValue: 0, hValue: 0 })
+                    buildTreeBranch(start, { treeNode: null, gValue: 0, hValue: 0 }).forEach(node => {
                         frontier.push(node)
                     })
                     nextNode = calculateBestNextTreeNode(frontier, gCounter)
@@ -211,13 +244,23 @@
                     nextNode = calculateBestNextTreeNode(frontier, gCounter)
                     renderNewBoard(nextNode)
                 }
-                if (JSON.stringify(nextNode.treeNode) === JSON.stringify(endBoard)) {
+                if (nextNode.hValue == 0) {
                     solutionFound = true;
                     console.log('done!')
                     renderNewBoard(nextNode)
                     clearInterval(renderInterval)
                 }
             }
+        }
+
+        const pauseSolution = () => {
+            const pauseButtonHTML = document.getElementById("pauseButton")
+            pause = !pause
+            if (pause) {
+                return pauseButtonHTML.innerHTML = "CONTINUE"
+            }
+            return pauseButtonHTML.innerHTML = "PAUSE"
+
         }
 
         const renderNewBoard = () => {
@@ -246,11 +289,12 @@
             document.getElementById("boardPuzzle").remove()
         }
 
-        if (!isSolvable(board)) {
-            alert("Generated board is not resolvable. Please refresh page to try again!")
-        } else {
-            const renderInterval = setInterval(main, 33);
-        }
+        const renderInterval = setInterval(main, 33);
+        // if (!isSolvable(board)) {
+        //     alert("Generated board is not resolvable. Please refresh page to try again!")
+        // } else {
+
+        // }
     </script>
 </body>
 
