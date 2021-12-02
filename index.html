@@ -28,8 +28,8 @@
         <p id="biggest-frontier"></p>
         <p id="path-size"></p>
         <p id="current-hscore"></p>
-        <button onclick="setSolutionType('A*')" > START A* </button>
-        <button onclick="setSolutionType('uniform')"> START UNIFORM COST</button>
+        <button id="startA" onclick="setSolutionType('A*')" > START A* </button>
+        <button id="startB" onclick="setSolutionType('uniform')"> START UNIFORM COST</button>
         <br/>
         <button id="pauseButton" onclick="pauseSolution()">PAUSE</button>
     </div>
@@ -267,13 +267,18 @@
 
         let solutionType = null
         const setSolutionType = (solution) =>{
+            document.getElementById('startA').style.display="none"
+            document.getElementById('startB').style.display="none"
+            document.getElementById('pauseButton').style.display="inherit"
             if(solution === 'uniform'){
                 return solutionType = true
             }
             return solutionType = false
 
-            renderInterval()
+            
         }
+
+        document.getElementById('pauseButton').style.display="none"
         const renderInterval = setInterval(main, 33);
 
     </script>
