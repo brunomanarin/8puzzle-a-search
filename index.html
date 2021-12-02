@@ -85,7 +85,7 @@
 
 
         const expandedNodes = []
-        const frontier = []
+        let frontier = []
 
         const findMovementPossibilities = (spaceIndex) => {
             const pos = spaceIndex[0]
@@ -236,8 +236,8 @@
                     nextNode = calculateBestNextTreeNode(frontier, gCounter)
                 } else {
                     expandedNodes.push(nextNode)
-                    const nodeIndex = frontier.indexOf(nextNode)
-                    frontier.splice(nodeIndex, 1)
+                    const nodeToBeRemoved = frontier.find(item => JSON.stringify(item.treeNode) === JSON.stringify(nextNode.treeNode))
+                    frontier = frontier.filter(item => JSON.stringify(item.treeNode) !== JSON.stringify(nodeToBeRemoved.treeNode))
                     buildTreeBranch(nextNode.treeNode, nextNode).forEach(node => {
                         frontier.push(node)
                     })
