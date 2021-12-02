@@ -28,6 +28,9 @@
         <p id="biggest-frontier"></p>
         <p id="path-size"></p>
         <p id="current-hscore"></p>
+        <button onclick="setSolutionType('A*')" > START A* </button>
+        <button onclick="setSolutionType('uniform')"> START UNIFORM COST</button>
+        <br/>
         <button id="pauseButton" onclick="pauseSolution()">PAUSE</button>
     </div>
     <script>
@@ -76,9 +79,8 @@
             [[5, 8, 2], [1, 7, 3], [4, 6, 0]],
             [[3, 5, 6], [0, 7, 4], [2, 1, 8]]
         ]
+        // Choose your board from array or enter a custom one
         const board = entries[3]
-        //const board = [[1, 8, 2],[0, 4, 3],[7, 6, 5]]
-        //const board = [[], [], []]
         const tree = []
         let gCounter = 0;
         let nextNode = null;
@@ -88,6 +90,8 @@
         let frontier = []
 
         const findMovementPossibilities = (spaceIndex) => {
+            //Finds movements possibilities based on the index provided.
+            // [top,bottom,left,right] are how possibilites are displayed in the switch statements
             const pos = spaceIndex[0]
             const row = spaceIndex[1]
 
@@ -124,6 +128,7 @@
             }
         }
         const buildTreeBranch = (parentNode, parentNodeInfo) => {
+            //This functions build new nodes from a provided parent node
             const emptySpaceIndex = findNodeEmptySpace(parentNode)
             const possibleMovements = findMovementPossibilities(emptySpaceIndex)
             const treeBranchList = possibleMovements.map(possibility => {
@@ -153,21 +158,8 @@
 
         let bestNode = null;
 
-        const fillBoard = (board) => {
-            const numbersList = [1, 2, 3, 4, 5, 6, 7, 8, 0]
-            for (let i = 0; i < board.length; i++) {
-                while (board[i].length < 3) {
-                    const randomNumber = numbersList[Math.floor(Math.random() * 9)]
-                    const alreadyHasNumberInRows = board.map(row => {
-                        return row.includes(randomNumber)
-                    })
-                    if (!alreadyHasNumberInRows[0] && !alreadyHasNumberInRows[1] && !alreadyHasNumberInRows[2]) {
-                        board[i].push(randomNumber)
-                    }
-                }
-            }
-        }
         const findNodeEmptySpace = (treeNode) => {
+            //This function finds where the empty space on the board is
             let foundEmptySpaceIndex;
             treeNode.forEach((row, index) => {
                 const indexFound = row.findIndex(num => num == 0)
@@ -178,55 +170,27 @@
             return foundEmptySpaceIndex;
         }
         const calculateBestNextTreeNode = (tree) => {
+            //This function calculates which is the best next node to expand based on score values
             let bestNodeScore = Infinity;
-
+            
             tree.map(node => {
-                const fValue = node.hValue + node.gValue
+                const fValue = solutionType? node.gValue: node.hValue + node.gValue
                 if (fValue < bestNodeScore && node !== null && JSON.stringify(nextNode) !== JSON.stringify(node)) {
                     bestNodeScore = fValue
                     bestNode = node
-                    console.log(bestNode)
-                    console.log(node)
                 }
             })
 
             return bestNode
         }
-        const isSolvable = (start) => {
-            let inversions = 0
-            const range = Array.from(Array(9).keys())
-            JSON.stringify(range)
-            for (i in range) {
-                const [x, y] = [Math.floor(i / 3), i % 3];
-                for (j in Array.from({ length: 8 }, (_, index) => i + 1)) {
-                    const [x2, y2] = [Math.floor(j / 3), j % 3];
-                    if (start[x][y] > 0 && start[x2][y2] > 0 && start[x2][y2] < start[x][y]) {
-                        inversions += 1
-                    }
-                }
-            }
-
-            return inversions % 2 == 0
-        }
-        //fillBoard(board)
-        board.map((row, index) => {
-            row.map(num => {
-                const numWrapper = document.createElement("SPAN")
-                const listItemContent = document.createTextNode(num)
-                numWrapper.appendChild(listItemContent)
-                boardHTML.children[index].appendChild(numWrapper)
-            })
-
-        })
-
 
         let solutionFound = false;
         let pause = false;
         const main = () => {
             const start = board;
             const endBoard = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
-            console.log("Iterations: " + gCounter)
-            if (!solutionFound && !pause) {
+        
+            if (!solutionFound && !pause && solutionType !== null) {
                 gCounter++
                 if (nextNode == null) {
                     expandedNodes.push({ treeNode: start, parent: null, gValue: 0, hValue: 0 })
@@ -254,6 +218,7 @@
         }
 
         const pauseSolution = () => {
+            //Pauses solution
             const pauseButtonHTML = document.getElementById("pauseButton")
             pause = !pause
             if (pause) {
@@ -264,6 +229,7 @@
         }
 
         const renderNewBoard = () => {
+            //Renders the solving board and infos
             const ul = document.createElement("ul")
             ul.id = "boardPuzzle"
             document.getElementById('solvingBoard').appendChild(ul)
@@ -289,13 +255,29 @@
             document.getElementById("boardPuzzle").remove()
         }
 
-        const renderInterval = setInterval(main, 33);
-        // if (!isSolvable(board)) {
-        //     alert("Generated board is not resolvable. Please refresh page to try again!")
-        // } else {
+        const firstBoardRender = board.map((row, index) => {
+            row.map(num => {
+                const numWrapper = document.createElement("SPAN")
+                const listItemContent = document.createTextNode(num)
+                numWrapper.appendChild(listItemContent)
+                boardHTML.children[index].appendChild(numWrapper)
+            })
 
-        // }
+        })
+
+        let solutionType = null
+        const setSolutionType = (solution) =>{
+            if(solution === 'uniform'){
+                return solutionType = true
+            }
+            return solutionType = false
+
+            renderInterval()
+        }
+        const renderInterval = setInterval(main, 33);
+
     </script>
+        
 </body>
 
 </html>
