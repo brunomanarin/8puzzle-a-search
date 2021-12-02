@@ -6,17 +6,31 @@
 
 <body>
     <div id="main">
-        <ul id="boardPuzzle">
-            <li></li>
-            <li></li>
-            <li></li>
-        </ul>
+        <div id="originalBoard">
+            <p> Original generated board:</p>
+            <ul id="originalBoardPuzzle">
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+        </div>
+        <div id="solvingBoard">
+            <p> Solving board:</p>
+            <ul id="boardPuzzle">
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+        </div>
     </div>
-    <div id= "infos">
-
+    <div id="infos">
+        <p id="expanded-nodes"></p>
+        <p id="biggest-frontier"></p>
+        <p id="path-size"></p>
+        <p id="current-hscore"></p>
     </div>
     <script>
-        const boardHTML = document.getElementById("boardPuzzle")
+        const boardHTML = document.getElementById("originalBoardPuzzle")
         const goalBoardMap = {
             1: [0, 0],
             2: [0, 1],
@@ -28,9 +42,9 @@
             8: [2, 1],
             0: [2, 2]
         }
-        //const board = [[8,1,2], [0,4,3], [7,6,5]]
+        const board = [[3,2,7], [1,4,6], [0,5,8]]
         //const board = [[1, 8, 2],[0, 4, 3],[7, 6, 5]]
-        const board = [[],[],[]]
+        //const board = [[], [], []]
         const tree = []
         let gCounter = 0;
         let nextNode = null;
@@ -126,7 +140,6 @@
             return foundEmptySpaceIndex;
         }
         const calculateBestNextTreeNode = (tree, gScore) => {
-
             let bestNodeScore = Infinity;
             let bestNode = null;
             tree.map(node => {
@@ -144,16 +157,15 @@
 
             return bestNode
         }
-
-        const isSolvable = (start) =>{
+        const isSolvable = (start) => {
             let inversions = 0
             const range = Array.from(Array(9).keys())
             JSON.stringify(range)
-            for (i in range){
+            for (i in range) {
                 const [x, y] = [Math.floor(i / 3), i % 3];
-                for (j in Array.from({length: 8}, (_, index) => i + 1)){
+                for (j in Array.from({ length: 8 }, (_, index) => i + 1)) {
                     const [x2, y2] = [Math.floor(j / 3), j % 3];
-                    if (start[x][y] > 0 && start[x2][y2] > 0 && start[x2][y2] < start[x][y]){
+                    if (start[x][y] > 0 && start[x2][y2] > 0 && start[x2][y2] < start[x][y]) {
                         inversions += 1
                     }
                 }
@@ -162,8 +174,6 @@
             return inversions % 2 == 0
 
         }
-
-
         fillBoard(board)
         board.map((row, index) => {
             row.map(num => {
@@ -184,7 +194,7 @@
 
             gCounter++
             console.log("Iterations: " + gCounter)
-            if(!solutionFound){
+            if (!solutionFound) {
                 if (nextNode == null) {
                     expandedNodes.push(start)
                     buildTreeBranch(start, { treeNode: null }).forEach(node => {
@@ -211,10 +221,9 @@
         }
 
         const renderNewBoard = () => {
-            document.getElementById("boardPuzzle").remove()
             const ul = document.createElement("ul")
             ul.id = "boardPuzzle"
-            document.getElementById('main').appendChild(ul)
+            document.getElementById('solvingBoard').appendChild(ul)
             for (let i = 0; i < 3; i++) {
                 ul.appendChild(document.createElement("li"))
             }
@@ -226,12 +235,21 @@
                     ul.children[index].appendChild(numWrapper)
                 })
             })
+            const expandedNodesHTML = document.getElementById("expanded-nodes")
+            expandedNodesHTML.innerHTML = `Total expanded nodes: ${expandedNodes.length}`
+            const biggestFrontierHTML = document.getElementById("biggest-frontier")
+            biggestFrontierHTML.innerHTML = `Biggest frontier length: ${frontier.length}`
+            const pathSizeHTML = document.getElementById("path-size")
+            pathSizeHTML.innerHTML = `Current path size: ${nextNode.gValue}`
+            const hScoreHTML = document.getElementById("current-hscore")
+            hScoreHTML.innerHTML = `Current hScore: ${nextNode.hValue}`
+            document.getElementById("boardPuzzle").remove()
         }
 
-        if(!isSolvable(board)){
-            alert("Não da pra resolver")
-        }else{
-            const renderInterval = setInterval(main, 33) ;
+        if (!isSolvable(board)) {
+            alert("Generated board is not resolvable. Please refresh page to try again!")
+        } else {
+            const renderInterval = setInterval(main, 33);
         }
     </script>
 </body>
